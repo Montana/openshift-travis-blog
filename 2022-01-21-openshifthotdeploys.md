@@ -65,7 +65,7 @@ provider: openshift
 install: skip
 script: echo "hot_deploy test" 
 ```
-It's important to remember in OpenShift there's a GUI that lays on top of `k8s`. 
+It's important to remember in OpenShift there's a GUI that lays on top of `k8s`:
 
 ![image](https://user-images.githubusercontent.com/20936398/150584837-133afbf6-0b8e-4f8f-8630-a5f4dca489fe.png)
 
