@@ -14,112 +14,36 @@ tags:
 ---
 
 
-In this weeks tech blog, I'll show you how you can run Windows and Windows Server  specifically version 1809 with Travis CI. Let's get this started up.
+![TCI-OpenShift](https://user-images.githubusercontent.com/20936398/150583448-e2596870-8f44-4d02-81d5-a4e17bb0dd01.png)
+
+Hello again, it's Friday! So let's talk tech. We are going to be discussing OpenShift, in particular "Hot deployments." Hot Deployment is the process of adding new components (such as WAR files, EJB Jar files, enterprise Java beans, servlets, and JSP files, let's see what I can teach you, and maybe help you with on your future build. Let's turn up the heat, and read about OpenShift Hot Deploys. 
 
 <!-- more --> 
 
-## Getting started 
+## OpenShift & Hot Deploys
 
-Let's create a text file called `constraints.txt` and the contents of this file should look like this:
+Testing an OpenShift `hot_deploy` on Travis CI is straight forward. Let's make sure your repository contains `.openshift/markers/hot_deploy`, when you perform a `git push`, OpenShift will not rebuild the application and perform a hot deployment instead.
 
-```bash
-testinfras==3.3.0
-pytest==4.6.8
-codecov==2.0.15
-```
+## Enable Hot Deployments on OpenShift
 
-Now let's create another file called `requirements.txt`, what we need to do is copy the `constraints.txt` file in `requirements.txt, and how we do that is, using the `-c` flag in our `requirements.txt` file. So let's see how our `requirements.txt` file is going to look like:
+Open the CLI, and navigate to the directory where you want to create the application. To create a new, let's say `MontanasHotDeployment` application, execute the following command. If you already have an OpenShift Java application, then you can work with that as well. Have a look at the following command:
 
 ```bash
--c constraints.txt
-testinfra
-pytest
-codecov
+rhc create-app myapp montanashotdeployment
 ```
 
-## Python 3.8 on Windows Build
+To enable hot deployment, create a new file with the name hot_deploy inside the .openshift/markers directory. On nix machines, you can create a new file using the touch command as shown in the following command. On Windows machines, you can use file explorer to create a new file. Have a look at the following code:
 
-So let's start running a build using Windows and Python 3.8 as our default language, let's see this portion of how the `.travis.yml` file will look:
-
-```yaml
-fleet_script_tasks:
-  script: &ref_1
-    - python --version
-fleet_install_tasks:
-  install: &ref_0
-    - pip install -r requirements.txt
-matrix:
-  fast_finish: true
-  include:
-    - name: Python 3.8 on Windows
-      os: windows
-      language: shell
-      env:
-        - 'PATH=/c/Python38:/c/Python38/Scripts:$PATH'
-      before_install:
-        - choco install python --version 3.8.1
-        - pip install virtualenv
-        - virtualenv $HOME/venv
-        - source $HOME/venv/Scripts/activate
-      install: *ref_0
-      script: *ref_1
-      after_success:
-        - deactivate
+```bash
+touch .openshift/markers/hot_deploy 
 ```
 
-You'll see in the `before_install:` I used `choco` to install Python, set the virtual environment, and this `.travis.yml` will build, but what if you want to also run Windows Server in parallel? Well, I'll show you how to do that too.
+You'll then want to add the new file to the Git repository index, commit it to the local repository, and then push the changes to the application's remote Git repository:
 
-## Windows Server/Python 3.8 
+```bash
+git add .openshift/markers/hot_deploy $ git commit –am "enabled hot_deploy"
+```
 
-Let's now combine these ideas, so here's my current `.travis.yml`: 
-
-```yaml
-fleet_script_tasks:
-  script: &ref_1
-    - python --version
-fleet_install_tasks:
-  install: &ref_0
-    - pip install -r requirements.txt
-matrix:
-  fast_finish: true
-  include:
-    - name: Python 3.8 on Windows
-      os: windows
-      language: shell
-      env:
-        - 'PATH=/c/Python38:/c/Python38/Scripts:$PATH'
-      before_install:
-        - choco install python --version 3.8.1
-        - pip install virtualenv
-        - virtualenv $HOME/venv
-        - source $HOME/venv/Scripts/activate
-      install: *ref_0
-      script: *ref_1
-      after_success:
-        - deactivate
-    - name: 'Windows Server, version 1809'
-      os: windows
-      language: shell
-      env: 'PATH=/c/Python37:/c/Python37/Scripts:$PATH'
-      before_install:
-        - choco install python --version 3.7.3
-        - python -m pip install virtualenv
-        - virtualenv $HOME/venv
-        - source $HOME/venv/Scripts/activate
-      script:
-        - systeminfo
-        - wmic OS get OSArchitecture
-        - wmic process list full
-        - tasklist
-        - net start
-        - sc query
-      after_success:
-        - deactivate
- ```
- 
- At this point in the build, you've now added Windows Server, version 1809. I've also added some verbose commands to be ran in the `.travis.yml` like `netstat`, and `sc query`. Now try running the build, and watch it succeed! 
- 
- 
 ## Conclusion 
 
 There you go, you just used Windows, Windows Server and used some tools like `choco` and used verbose commands to get a broader scale of your build. 
